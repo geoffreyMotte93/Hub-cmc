@@ -9,8 +9,12 @@ use App\Http\Controllers\API\CategorieController;
 use App\Http\Controllers\API\DocumentationController;
 use App\Http\Controllers\API\DocumentsController;
 use App\Http\Controllers\API\FaqController;
+use App\Http\Controllers\API\PopularPost;
+use App\Http\Controllers\API\SeachPostController;
 use App\Http\Controllers\API\TagController;
 use App\Http\Controllers\API\UserController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -57,3 +61,8 @@ Route::middleware('auth:sanctum')->post('list_documents' , [DocumentsController:
 Route::middleware('auth:sanctum')->post('last_documents' , [DocumentsController::class, 'last_documents']);
 
 Route::post('get_equipes' , [UserController::class, 'get_equipes']);
+Route::post('popular_post' , [PopularPost::class, 'index']);
+Route::post('rss' , [SeachPostController::class, 'getRSS']);
+Route::post('add_post_rss' , [SeachPostController::class, 'add_post_rss']);
+Route::post('delete_post_rss' , [SeachPostController::class, 'delete_post_rss']);
+Route::post('search' , [SeachPostController::class, 'searchPost']);

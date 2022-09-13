@@ -31,11 +31,11 @@ class DocumentationController extends BaseController
         }
 
         $site = Site::find($siteInfos->id);
-        if (is_null($site->documentations)) {
+        if (is_null($site->documentations->where('status', 'PUBLISHED'))) {
             return $this->sendError('Documents does not exist for this website.');
         }
 
-        return $this->sendResponse($site->documentations, 'Post fetched.');
+        return $this->sendResponse($site->documentations->where('status', 'PUBLISHED'), 'Post fetched.');
 
     }
     
@@ -118,7 +118,7 @@ class DocumentationController extends BaseController
                 return $this->sendError('<p>Aucun résultat(s)</p>');;
             }
 
-            $documentationsList = $category->documentations;
+            $documentationsList = $category->documentations->where('status', 'PUBLISHED');
 
             
 
@@ -132,7 +132,7 @@ class DocumentationController extends BaseController
     {
             $siteInfos = DB::table('sites')->where('url', 'LIKE', "%{$request->host}%")->first();
 
-            $documentationsList = Documentation::orderBy('updated_at','DESC')->limit(5)->get();
+            $documentationsList = Documentation::where('status', 'PUBLISHED')->orderBy('updated_at','DESC')->limit(5)->get();
 
             $data = $this->verif_document_site($documentationsList, $siteInfos);
 
@@ -145,11 +145,11 @@ class DocumentationController extends BaseController
 
         $tag = Tag::find($request->id);
 
-        if (empty($tag->documentations[0])) {
+        if (empty($tag->documentations[0]->where('status', 'PUBLISHED'))) {
             return $this->sendError('<p>Aucun résultat(s)</p>');
         }
 
-        $documentationsList = $tag->documentations;
+        $documentationsList = $tag->documentations->where('status', 'PUBLISHED');
         $data = $this->verif_document_site($documentationsList, $siteInfos);
 
         return $this->sendResponse($data, 'Post fetched.');
@@ -161,7 +161,7 @@ class DocumentationController extends BaseController
         $siteInfos = DB::table('sites')->where('url', 'LIKE', "%{$request->host}%")->first();
 
         $documentations = [];
-        $documentations = Documentation::where('title', 'LIKE', "%{$request->searchTerm}%")->orWhere('exerpt', 'LIKE', "%{$request->searchTerm}%")->orWhere('content', 'LIKE', "%{$request->searchTerm}%")->get();    
+        $documentations = Documentation::where('status', 'PUBLISHED')->where('title', 'LIKE', "%{$request->searchTerm}%")->orWhere('exerpt', 'LIKE', "%{$request->searchTerm}%")->orWhere('content', 'LIKE', "%{$request->searchTerm}%")->get();
         if (is_null($documentations)) {
             return $this->sendError('<p>Pas de documentations qui correspont a :' + $request->searchTerm + '</p>');
         }

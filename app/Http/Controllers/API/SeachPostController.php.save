@@ -1,0 +1,87 @@
+<?php
+   
+namespace App\Http\Controllers\API;
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\API\BaseController as BaseController;
+use App\Models\Flux_rss;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use SimpleXMLElement;
+
+class SeachPostController extends BaseController
+{
+    // ajoute l'article quand l'utilsateur wordpress sauvegarde son article
+    public function add_post_rss(){
+        $slug = $this->slug($_POST['site']);
+        $value = DB::table('flux_rss_'.$slug)->where('id_post', $_POST['id_post'])->first();
+        if(empty($value)){
+            DB::insert('insert into flux_rss_'.$slug.' (id_post, title, link, created_at) values (?, ?, ?, ?)', [$_POST['id_post'], $_POST['title'], $_POST['link'], now()]);
+        }else{
+            DB::table('flux_rss_'.$slug)->where('id_post', $_POST['id_post'])->update( array('title'=> $_POST['title'], 'link'=> $_POST['link'] , 'updated_at'=> now()) );
+        }
+    }
+
+    // supprime l'article quand l'utilsateur wordpress supprime son article
+    public function delete_post_rss(){
+        $slug = $this->slug($_POST['site']);
+        $value = DB::table('flux_rss_'.$slug)->where('id_post', $_POST['id_post'])->delete();
+    }
+
+
+    // recherche dans la DBB un post correspondant a la recherche
+    public function searchPost(){
+        $slug = $this->slug($_POST['site']);
+        $value = DB::table('flux_rss_'.$slug)->where('title', 'like', '%' . $_POST['search'] . '%')->get();
+        return json_encode($value);
+    }
+
+    // recupére le flux rss du wordpress
+    public function getRSS()
+    {
+        $a = 0;
+        // slugify name site
+        $slug = $this->slug($_POST['site']);
+        // test if table exist
+        $table = Schema::hasTable('flux_rss_'.$slug);
+        if($table){
+            // récupérer les 20 derniers articles
+            $rss = $this->get_RSS_website($_POST['url_site'].'/wp-content/plugins/CMC/inc/RSS/full_rss.php?start_date='.$_POST['start_date'].'&end_date='.$_POST['end_date']);  
+        }else{
+            // créer la table flux avec le slug du site
+            Schema::create('flux_rss_'.$slug, function (Blueprint $table) {
+                $table->id();
+                $table->integer('id_post');
+                $table->string('title');
+                $table->text('link');
+                $table->timestamps();
+            });
+            // récupérer tous les articles depuis '2018-01-01 00:00:00'
+            $rss = $this->get_RSS_website($_POST['url_site'].'/wp-content/plugins/CMC/inc/RSS/full_rss.php?start_date='.$_POST['start_date']);    
+        }
+        // parcour le XMl-rss verifie si il n'existe pas et insérer dans la table
+        foreach($rss->channel->post as $item)
+        {
+            $value = DB::table('flux_rss_'.$slug)->where('id_post', $item->guid)->first();
+            if(empty($value)){
+                DB::insert('insert into flux_rss_'.$slug.' (id_post, title, link, created_at) values (?, ?, ?, ?)', [$item->guid, $item->title, $item->link, now()]);
+            }
+            $a++;
+        }
+    }
+
+
+    public function get_RSS_website($url){
+        $xmlString = html_entity_decode(file_get_contents($url));
+        $xmlObject = simplexml_load_string($xmlString);  
+        return $xmlObject;
+    }
+
+    function slug($string){
+     	 $result = str_replace( "'", '', $string);
+
+        return strtolower(trim(preg_replace('~[^0-9a-z]+~i', '_', html_entity_decode(preg_replace('~&([a-z]{1,2})(?:acute|cedil|circ|grave|lig|orn|ring|slash|th|tilde|uml);~i', '$1', $result), ENT_QUOTES, 'UTF-8')), '-'));
+    }
+   
+}

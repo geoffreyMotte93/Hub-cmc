@@ -167,6 +167,7 @@ return [
         /*
          * Package Service Providers...
          */
+        Spatie\Analytics\AnalyticsServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -192,6 +193,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // ...
+        'Analytics' => Spatie\Analytics\AnalyticsFacade::class,
     ])->toArray(),
 
 ];

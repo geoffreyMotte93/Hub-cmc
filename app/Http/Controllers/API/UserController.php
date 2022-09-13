@@ -11,7 +11,7 @@ class UserController  extends BaseController
 {
     public function get_equipes(Request $request)
     {
-        $users = User::where('role_id', 1)->get();
+        $users = User::where('role_id', 1)->orderBy('post', 'asc')->get();
 
         return $this->sendResponse($users, 'Users fetched.');
     }

@@ -13,7 +13,7 @@ class CategorieController extends BaseController
 {
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::where('visibility', 'oui')->get();
         return $this->sendResponse(ResourcesCategory::collection($categories), 'Posts fetched.');
     }
     

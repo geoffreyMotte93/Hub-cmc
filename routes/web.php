@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Face_vision_controller;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -17,6 +17,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('detect_face' , [Face_vision_controller::class, 'detectFaces']);
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
